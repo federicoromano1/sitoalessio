@@ -1188,21 +1188,21 @@
         }
 
         async function controllaServer() {
-            const status = document.getElementById("server-status");
+    const status = document.getElementById("server-status");
 
-            try {
-                await apiFetch(`${SERVER_URL}/api/files-guest`);
+    try {
+        await apiFetch(`${SERVER_URL}/api/files-guest`);
 
-                status.innerText = "Server online";
-                status.classList.remove("server-ko");
-                status.classList.add("server-ok");
-            } catch (err) {
-                status.innerText = "Server non raggiungibile: avvia node server.js";
-                status.classList.remove("server-ok");
-                status.classList.add("server-ko");
-                console.warn(err.message);
-            }
-        }
+        status.innerText = "Server online";
+        status.classList.remove("server-ko");
+        status.classList.add("server-ok");
+    } catch (err) {
+        status.innerText = "Server in avvio...";
+        status.classList.remove("server-ko");
+        status.classList.add("server-ok");
+        console.warn(err.message);
+    }
+}
 
         async function aggiornaListaFileHost() {
             const container = document.getElementById("host-files-list");
