@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Piattaforma PDF Protetta</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #07070a;
+            --card: rgba(22, 22, 28, 0.88);
+            --line: rgba(255, 255, 255, 0.10);
+            --text: #ffffff;
+            --muted: #a1a1aa;
+            --green: #00d084;
+            --green2: #00ffa3;
+            --blue: #3b82f6;
+            --red: #ff453a;
+            --orange: #ffb020;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            height: 100%;
+            background: var(--bg);
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            min-height: 100%;
+            color: var(--text);
+            padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+            overflow-x: hidden;
+            position: relative;
+            background:
+                radial-gradient(circle at top left, rgba(0, 255, 163, 0.15), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.15), transparent 36%),
+                var(--bg);
+            touch-action: manipulation;
+            overscroll-behavior: none;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: -35%;
+            z-index: -3;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 18% 30%, rgba(0, 255, 163, 0.16), transparent 26%),
+                radial-gradient(circle at 82% 68%, rgba(59, 130, 246, 0.16), transparent 30%),
+                radial-gradient(circle at 48% 50%, rgba(255, 255, 255, 0.045), transparent 34%);
+            animation: animatedBackground 22s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+
+        body::after {
+            z-index: -2;
+            opacity: 0.45;
+            filter: blur(22px);
+            animation-duration: 32s;
+            animation-direction: alternate-reverse;
+        }
+
+        @media print {
+            body {
+                display: none !important;
+            }
+        }
+
+        @keyframes animatedBackground {
+            0% {
+                transform: translate3d(-2%, -1%, 0) scale(1);
+            }
+
+            50% {
+                transform: translate3d(2%, 1.5%, 0) scale(1.045);
+            }
+
+            100% {
+                transform: translate3d(-1%, 2%, 0) scale(1.025);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 rgba(0, 255, 163, 0.0);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 163, 0.22);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes loaderSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes loaderPop {
+            from {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .page-wrap {
+            width: 100%;
+            min-height: calc(100dvh - 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            padding: 24px;
+            border-radius: 26px;
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.58);
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+            animation: fadeUp 0.32s ease both;
+        }
+
+        .brand-mark {
+            width: 64px;
+            height: 64px;
+            border-radius: 22px;
+            margin: 0 auto 14px auto;
+            background:
+                linear-gradient(135deg, rgba(0, 255, 163, 0.95), rgba(59, 130, 246, 0.95));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #07110d;
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+
+        .brand-mark svg {
+            width: 34px;
+            height: 34px;
+            stroke: #06120d;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 850;
+            margin-bottom: 8px;
+            letter-spacing: -0.035em;
+        }
+
+        p {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.45;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="file"] {
+            width: 100%;
+            padding: 15px 14px;
+            margin: 8px 0 12px 0;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.11);
+            background-color: rgba(255,255,255,0.065);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            min-height: 52px;
+            touch-action: manipulation;
+        }
+
+        input:focus {
+            border-color: var(--green2);
+            box-shadow: 0 0 0 4px rgba(0,255,163,0.12);
+        }
+
+        input::file-selector-button {
+            border: none;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--green);
+            color: #05120d;
+            font-weight: 850;
+            margin-right: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #008060, #00d084);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 850;
+            border-radius: 16px;
+            cursor: pointer;
+            width: 100%;
+            min-height: 52px;
+            margin-top: 8px;
+            transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 12px 26px rgba(0,128,96,0.24);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            touch-action: manipulation;
+        }
+
+        button svg {
+            width: 19px;
+            height: 19px;
+            flex: 0 0 auto;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:hover {
+            filter: brightness(1.08);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            box-shadow: none;
+        }
+
+        .btn-danger,
+        .btn-delete {
+            background: rgba(255,59,48,0.15);
+            color: var(--red);
+            box-shadow: none;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeUp 0.32s ease both;
+        }
+
+        .field-box {
+            margin: 14px 0;
+            padding: 14px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            text-align: left;
+        }
+
+        .field-label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .field-label:first-child {
+            margin-top: 0;
+        }
+
+        .list-title {
+            text-align: left;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 850;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            letter-spacing: 0.08em;
+        }
+
+        .files-container {
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            max-height: 320px;
+            overflow-y: auto;
+            text-align: left;
+            margin-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            gap: 10px;
+            animation: popIn 0.22s ease both;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            max-width: 66%;
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 850;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-pass {
+            font-size: 12px;
+            color: #34c759;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+
+        .file-status {
+            font-size: 12px;
+            margin-top: 4px;
+            color: var(--muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 7px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .btn-mini {
+            width: auto;
+            min-height: 40px;
+            margin: 0;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            box-shadow: none;
+            white-space: nowrap;
+        }
+
+        .no-files {
+            padding: 22px;
+            text-align: center;
+            color: #71717a;
+            font-size: 14px;
+        }
+
+        .live-preview-box {
+            background: rgba(0, 128, 96, 0.10);
+            border: 1px dashed rgba(0,255,163,0.55);
+            border-radius: 20px;
+            padding: 14px;
+            margin-top: 15px;
+            text-align: left;
+            display: none;
+            animation: popIn 0.25s ease both;
+        }
+
+        .live-preview-box h4 {
+            font-size: 13px;
+            color: var(--green2);
+            margin-bottom: 6px;
+        }
+
+        .regolamento-box {
+            background: rgba(255, 59, 48, 0.08);
+            border: 1px solid rgba(255, 59, 48, 0.30);
+            border-radius: 18px;
+            padding: 12px;
+            margin: 12px 0;
+            text-align: left;
+            color: #d1d5db;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .regolamento-box b {
+            color: var(--red);
+        }
+
+        .check-regolamento {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            text-align: left;
+            margin: 10px 0 14px 0;
+            color: #ffffff;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .check-regolamento input {
+            width: 20px;
+            height: 20px;
+            margin-top: 1px;
+            accent-color: var(--green);
+            flex-shrink: 0;
+        }
+
+        .server-status {
+            font-size: 12px;
+            margin-top: 10px;
+            color: var(--muted);
+        }
+
+        .server-ok {
+            color: #34c759;
+        }
+
+        .server-ko {
+            color: var(--red);
+        }
+
+        #viewer-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background:
+                radial-gradient(circle at top, rgba(0,128,96,0.12), transparent 35%),
+                #050507;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            animation: fadeUp 0.25s ease both;
+            touch-action: manipulation;
+        }
+
+        .viewer-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            padding: calc(8px + env(safe-area-inset-top)) 10px 10px 10px;
+            background: rgba(5,5,7,0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .viewer-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 8px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .viewer-title {
+            min-width: 0;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 850;
+            color: #ffffff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .viewer-button {
+            width: auto;
+            min-height: 42px;
+            margin: 0;
+            padding: 10px 12px;
+            font-size: 12px;
+            border-radius: 13px;
+            box-shadow: none;
+            white-space: nowrap;
+        }
+
+        .viewer-button.red {
+            background: rgba(255,59,48,0.20);
+            color: var(--red);
+        }
+
+        .viewer-button.blue {
+            background: rgba(59,130,246,0.28);
+            color: #ffffff;
+        }
+
+        .viewer-controls {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 9px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-indicator {
+            min-width: 92px;
+            text-align: center;
+            font-size: 13px;
+            color: #d4d4d8;
+            font-weight: 850;
+            padding: 10px 10px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 13px;
+        }
+
+        #viewer-user-badge {
+            max-width: 1100px;
+            margin: 10px auto 0 auto;
+            padding: 10px 12px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #ffffff;
+            font-size: 12px;
+            line-height: 1.25;
+            border: 1px solid rgba(255,255,255,0.12);
+            display: none;
+        }
+
+        #pdf-protected-area {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 14px auto 28px auto;
+            overflow: hidden;
+            touch-action: none;
+            background: #111;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+        }
+
+        #pdf-canvas-blur {
+            display: block;
+            max-width: 100%;
+            height: auto !important;
+            margin: 0 auto;
+            filter: blur(5px) brightness(0.78);
+            transform: scale(1.012);
+            transform-origin: center center;
+        }
+
+        #lens-box {
+            position: absolute;
+            width: min(72vw, 760px);
+            height: 390px;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.92);
+            border-radius: 18px;
+            box-shadow:
+                0 0 0 9999px rgba(0, 0, 0, 0.20),
+                0 12px 34px rgba(0, 0, 0, 0.70),
+                0 0 26px rgba(0,255,163,0.16);
+            z-index: 4;
+            pointer-events: none;
+            background: transparent;
+        }
+
+        #pdf-canvas-clear {
+            position: absolute;
+            left: 0;
+            top: 0;
+            max-width: none;
+            height: auto !important;
+        }
+
+        .watermark-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-content: space-around;
+            overflow: hidden;
+            opacity: 0.15;
+            font-size: 14px;
+            color: var(--red);
+            font-weight: 900;
+            transform: rotate(-25deg) scale(1.18);
+            z-index: 6;
+        }
+
+        .blurred {
+            filter: blur(32px) brightness(0.25) !important;
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+            background-size: 200% 100%;
+            animation: shimmer 1.2s infinite linear;
+        }
+
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(2, 6, 8, 0.72);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-card {
+            width: min(320px, 86vw);
+            padding: 24px;
+            border-radius: 24px;
+            background: rgba(18, 18, 24, 0.88);
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.65);
+            text-align: center;
+            animation: loaderPop 0.22s ease both;
+        }
+
+        .loading-spinner {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 14px auto;
+            border-radius: 999px;
+            border: 4px solid rgba(255,255,255,0.14);
+            border-top-color: var(--green2);
+            border-right-color: var(--blue);
+            animation: loaderSpin 0.8s linear infinite;
+        }
+
+        #loading-title {
+            font-weight: 850;
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+
+        #loading-text {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        @media (max-width: 760px) {
+            body {
+                padding: 10px;
+            }
+
+            .page-wrap {
+                min-height: calc(100dvh - 20px);
+                align-items: center;
+                justify-content: center;
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+
+            .card {
+                border-radius: 24px;
+                padding: 18px;
+            }
+
+            .brand-mark {
+                width: 58px;
+                height: 58px;
+                border-radius: 20px;
+            }
+
+            h2 {
+                font-size: 22px;
+            }
+
+            p {
+                font-size: 13px;
+            }
+
+            button {
+                min-height: 54px;
+                padding: 15px 16px;
+                border-radius: 16px;
+                font-size: 15px;
+            }
+
+            input[type="text"],
+            input[type="password"],
+            input[type="file"] {
+                min-height: 54px;
+                font-size: 16px;
+            }
+
+            .files-container {
+                max-height: 380px;
+            }
+
+            .file-item {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .file-info {
+                max-width: 100%;
+            }
+
+            .file-name {
+                white-space: normal;
+                overflow: visible;
+                line-height: 1.25;
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .btn-mini {
+                min-height: 44px;
+                flex: 1;
+            }
+
+            .viewer-topbar {
+                padding-left: max(8px, env(safe-area-inset-left));
+                padding-right: max(8px, env(safe-area-inset-right));
+            }
+
+            .viewer-row {
+                grid-template-columns: 1fr 44px 44px;
+                gap: 6px;
+            }
+
+            .viewer-title {
+                font-size: 12px;
+            }
+
+            .viewer-button {
+                min-height: 42px;
+                padding: 9px;
+                font-size: 0;
+                border-radius: 13px;
+            }
+
+            .viewer-button svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .viewer-controls {
+                gap: 6px;
+            }
+
+            .viewer-controls .viewer-button {
+                font-size: 0;
+            }
+
+            .page-indicator {
+                min-width: 76px;
+                font-size: 12px;
+                padding: 10px 8px;
+            }
+
+            #viewer-user-badge {
+                font-size: 11px;
+            }
+
+            #pdf-protected-area {
+                margin-top: 10px;
+                border-radius: 14px;
+            }
+
+            #lens-box {
+                width: min(90vw, 420px);
+                height: 240px;
+                border-radius: 15px;
+                top: 38%;
+            }
+
+            .watermark-overlay {
+                font-size: 11px;
+                opacity: 0.25;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .viewer-row {
+                grid-template-columns: 1fr 40px 40px;
+            }
+
+            .viewer-button {
+                min-height: 40px;
+                padding: 8px;
+            }
+
+            #lens-box {
+                height: 215px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-wrap">
+        <div id="panel-welcome" class="card panel active">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 3h7l5 5v13H7z"></path>
+                    <path d="M14 3v5h5"></path>
+                    <path d="M9 14h6"></path>
+                    <path d="M9 17h4"></path>
+                </svg>
+            </div>
+
+            <h2>Portale PDF Protetto</h2>
+            <p>visualizzazione PDF multipagina e download.</p>
+
+            <button onclick="switchPanel('panel-host-login')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z"></path>
+                    <path d="M4 21a8 8 0 0 1 16 0"></path>
+                </svg>
+                Accedi come HOST
+            </button>
+
+            <button onclick="switchPanel('panel-guest-login')" class="btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Accedi come OSPITE
+            </button>
+
+            <div id="server-status" class="server-status">Controllo server...</div>
+        </div>
+
+        <div id="panel-host-login" class="card panel">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="10" width="16" height="11" rx="2"></rect>
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                </svg>
+            </div>
+
+            <h2>Area Amministratore</h2>
+            <p>Inserisci la password master.</p>
+
+            <input type="password" id="host-master-pass" placeholder="Password Master">
+
+            <button onclick="loginHost()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <path d="M10 17l5-5-5-5"></path>
+                    <path d="M15 12H3"></path>
+                </svg>
+                Accedi
+            </button>
+
+            <button onclick="switchPanel('panel-welcome')" class="btn-secondary">
+                Indietro
+            </button>
+        </div>
+
+        <div id="panel-host-dashboard" class="card panel">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 16V4"></path>
+                    <path d="M7 9l5-5 5 5"></path>
+                    <path d="M5 20h14"></path>
+                </svg>
+            </div>
+
+            <h2>Pannello Host</h2>
+            <p>Carica PDF e assegna una password.</p>
+
+            <div class="field-box">
+                <label class="field-label">1. Carica PDF</label>
+                <input type="file" id="host-file-input" accept="application/pdf">
+
+                <label class="field-label" for="host-guest-pass-set">2. Password documento</label>
+                <input type="text" id="host-guest-pass-set" placeholder="Es. Segreto123">
+
+                <p style="margin:0; font-size:12px;">
+                    L’ospite vedrà tutti i file caricati. Per aprire il PDF dovrà inserire nome, cognome e password.
+                </p>
+            </div>
+
+            <button id="btn-salva" onclick="salvaConfigurazioneHost()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <path d="M17 21v-8H7v8"></path>
+                    <path d="M7 3v5h8"></path>
+                </svg>
+                Salva nel Database
+            </button>
+
+            <div id="ultimo-salvataggio-box" class="live-preview-box">
+                <h4>✓ SALVATO NEL DB</h4>
+                <p style="margin-bottom:0; color:#fff; font-size:13px;">
+                    File: <span id="preview-nome-file" style="color:#aaa;"></span><br>
+                    Pass: <span id="preview-pass-file" style="color:#34c759;"></span>
+                </p>
+
+                <div class="action-buttons" style="margin-top:12px;">
+                    <button id="btn-preview-apri" class="btn-mini">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Apri
+                    </button>
+
+                    <button id="btn-preview-elimina" class="btn-mini btn-delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M8 6V4h8v2"></path>
+                            <path d="M19 6l-1 15H6L5 6"></path>
+                        </svg>
+                        Elimina
+                    </button>
+                </div>
+            </div>
+
+            <div class="list-title">ARCHIVIO FILE CARICATI</div>
+            <div class="files-container" id="host-files-list"></div>
+
+            <button onclick="switchPanel('panel-welcome')" class="btn-secondary">Esci</button>
+        </div>
+
+        <div id="panel-guest-login" class="card panel">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+
+            <h2>Area Ospite</h2>
+            <p>Scegli un documento e inserisci nome, cognome e password.</p>
+
+            <div class="field-box">
+                <label class="field-label" for="guest-nome-input">Nome</label>
+                <input type="text" id="guest-nome-input" placeholder="Inserisci il tuo nome" autocomplete="given-name">
+
+                <label class="field-label" for="guest-cognome-input">Cognome</label>
+                <input type="text" id="guest-cognome-input" placeholder="Inserisci il tuo cognome" autocomplete="family-name">
+
+                <label class="field-label" for="guest-pass-input">Password documento</label>
+                <input type="password" id="guest-pass-input" placeholder="Inserisci la password del documento" autocomplete="off">
+            </div>
+
+            <div class="regolamento-box">
+                <b>Regolamento di utilizzo</b><br>
+                Il documento è riservato. È vietato effettuare screenshot, registrazioni schermo, fotografie, copie, condivisioni o diffusione del contenuto.
+                Il watermark può riportare nome, cognome, data, ora e codice ip dispositivo.
+            </div>
+
+            <label class="check-regolamento">
+                <input type="checkbox" id="guest-accetto-regolamento">
+                <span>Dichiaro di aver letto e accettato il regolamento.</span>
+            </label>
+
+            <div class="list-title">DOCUMENTI DISPONIBILI</div>
+            <div class="files-container" id="guest-files-list"></div>
+
+            <button onclick="switchPanel('panel-welcome')" class="btn-secondary">Home</button>
+        </div>
+    </div>
+
+    <div id="viewer-container">
+        <div class="viewer-topbar">
+            <div class="viewer-row">
+                <div id="viewer-title" class="viewer-title">Documento</div>
+
+                <button id="btn-download-pdf" class="viewer-button blue" onclick="scaricaPdfCorrente()" title="Scarica PDF con watermark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v12"></path>
+                        <path d="M7 10l5 5 5-5"></path>
+                        <path d="M5 21h14"></path>
+                    </svg>
+                    <span class="viewer-text">Scarica</span>
+                </button>
+
+                <button id="btn-chiudi-viewer" class="viewer-button red" title="Chiudi">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18"></path>
+                        <path d="M6 6l12 12"></path>
+                    </svg>
+                    <span class="viewer-text">Chiudi</span>
+                </button>
+            </div>
+
+            <div class="viewer-controls">
+                <button class="viewer-button btn-secondary" onclick="paginaPrecedente()" title="Pagina precedente">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6"></path>
+                    </svg>
+                    <span class="viewer-text">Prec.</span>
+                </button>
+
+                <div id="page-indicator" class="page-indicator">1 / 1</div>
+
+                <button class="viewer-button btn-secondary" onclick="paginaSuccessiva()" title="Pagina successiva">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 6l6 6-6 6"></path>
+                    </svg>
+                    <span class="viewer-text">Succ.</span>
+                </button>
+            </div>
+
+            <div id="viewer-user-badge"></div>
+        </div>
+
+        <div id="pdf-protected-area">
+            <canvas id="pdf-canvas-blur"></canvas>
+
+            <div id="lens-box">
+                <canvas id="pdf-canvas-clear"></canvas>
+            </div>
+
+            <div class="watermark-overlay" id="watermark-box"></div>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <div id="loading-title">Caricamento</div>
+            <p id="loading-text">Preparazione documento...</p>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_HOST_PASSWORD = "aleadmin";
+        const SERVER_URL = window.location.origin;
+
+        let fileIdSelezionatoOspite = "";
+        let nomeFileSelezionatoOspite = "";
+        let ospiteNomeCompleto = "";
+
+        let pdfDocumentoCorrente = null;
+        let pdfBase64Corrente = "";
+        let pdfNomeCorrente = "documento.pdf";
+        let paginaCorrente = 1;
+        let pagineTotali = 1;
+        let ritornoViewerPanel = "panel-welcome";
+        let resizeTimer = null;
+
+        let ultimoTap = 0;
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+
+        async function apiFetch(url, options = {}) {
+            let response;
+
+            try {
+                response = await fetch(url, options);
+            } catch (err) {
+                throw new Error("Impossibile contattare il server Node. Controlla che server.js sia avviato sulla porta 3000.");
+            }
+
+            const testo = await response.text();
+            let data = null;
+
+            try {
+                data = testo ? JSON.parse(testo) : {};
+            } catch (err) {
+                console.error("Risposta non JSON ricevuta dal server:", testo);
+                throw new Error("Risposta non valida dal server.");
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || data.error || "Errore server.");
+            }
+
+            return data;
+        }
+
+        function mostraLoading(titolo, testo) {
+            document.getElementById("loading-title").innerText = titolo || "Caricamento";
+            document.getElementById("loading-text").innerText = testo || "Attendere...";
+            document.getElementById("loading-overlay").classList.add("active");
+        }
+
+        function nascondiLoading() {
+            document.getElementById("loading-overlay").classList.remove("active");
+        }
+
+        function switchPanel(panelId) {
+            document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+
+            const panel = document.getElementById(panelId);
+            if (panel) {
+                panel.classList.add("active");
+            }
+
+            document.getElementById("viewer-container").style.display = "none";
+
+            if (panelId === "panel-host-dashboard") {
+                aggiornaListaFileHost();
+            }
+
+            if (panelId === "panel-guest-login") {
+                aggiornaListaFileOspite();
+            }
+        }
+
+        function loginHost() {
+            const pass = document.getElementById("host-master-pass").value;
+
+            if (pass === MASTER_HOST_PASSWORD) {
+                document.getElementById("host-master-pass").value = "";
+                switchPanel("panel-host-dashboard");
+            } else {
+                alert("Password errata!");
+            }
+        }
+
+        async function controllaServer() {
+            const status = document.getElementById("server-status");
+
+            try {
+                await apiFetch(`${SERVER_URL}/api/files-guest`);
+
+                status.innerText = "Server online";
+                status.classList.remove("server-ko");
+                status.classList.add("server-ok");
+            } catch (err) {
+                status.innerText = "Server non raggiungibile: avvia node server.js";
+                status.classList.remove("server-ok");
+                status.classList.add("server-ko");
+                console.warn(err.message);
+            }
+        }
+
+        async function aggiornaListaFileHost() {
+            const container = document.getElementById("host-files-list");
+            container.innerHTML = `<div class="no-files loading-shimmer">Caricamento...</div>`;
+
+            try {
+                const files = await apiFetch(`${SERVER_URL}/api/files-host`);
+                container.innerHTML = "";
+
+                if (!Array.isArray(files) || files.length === 0) {
+                    container.innerHTML = `<div class="no-files">Nessun file nel DB.</div>`;
+                    return;
+                }
+
+                files.forEach(file => {
+                    const item = document.createElement("div");
+                    item.className = "file-item";
+
+                    const fileInfo = document.createElement("div");
+                    fileInfo.className = "file-info";
+
+                    const nome = document.createElement("span");
+                    nome.className = "file-name";
+                    nome.innerText = file.nome;
+
+                    const pass = document.createElement("span");
+                    pass.className = "file-pass";
+                    pass.innerText = "Pass: " + file.password;
+
+                    const stato = document.createElement("span");
+                    stato.className = "file-status";
+                    stato.innerText = "Accessi: " + (file.accessiTotali || 0);
+
+                    fileInfo.appendChild(nome);
+                    fileInfo.appendChild(pass);
+                    fileInfo.appendChild(stato);
+
+                    const buttons = document.createElement("div");
+                    buttons.className = "action-buttons";
+
+                    const btnApri = document.createElement("button");
+                    btnApri.className = "btn-mini";
+                    btnApri.innerHTML = iconEye() + " Apri";
+                    btnApri.onclick = () => apriFileHost(file.id);
+
+                    const btnElimina = document.createElement("button");
+                    btnElimina.className = "btn-mini btn-delete";
+                    btnElimina.innerHTML = iconTrash() + " Elimina";
+                    btnElimina.onclick = () => eliminaFile(file.id);
+
+                    buttons.appendChild(btnApri);
+                    buttons.appendChild(btnElimina);
+
+                    item.appendChild(fileInfo);
+                    item.appendChild(buttons);
+                    container.appendChild(item);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<div class="no-files">Errore caricamento lista.</div>`;
+                alert("Errore lista host:\n" + err.message);
+            }
+        }
+
+        async function aggiornaListaFileOspite() {
+            const container = document.getElementById("guest-files-list");
+            container.innerHTML = `<div class="no-files loading-shimmer">Caricamento...</div>`;
+
+            try {
+                const files = await apiFetch(`${SERVER_URL}/api/files-guest`);
+                container.innerHTML = "";
+
+                if (!Array.isArray(files) || files.length === 0) {
+                    container.innerHTML = `<div class="no-files">Nessun file disponibile.</div>`;
+                    return;
+                }
+
+                files.forEach(file => {
+                    const item = document.createElement("div");
+                    item.className = "file-item";
+
+                    const fileInfo = document.createElement("div");
+                    fileInfo.className = "file-info";
+                    fileInfo.style.maxWidth = "70%";
+
+                    const nome = document.createElement("span");
+                    nome.className = "file-name";
+                    nome.innerText = file.nome;
+
+                    const stato = document.createElement("span");
+                    stato.className = "file-status";
+                    stato.innerText = "Protetto da password";
+
+                    fileInfo.appendChild(nome);
+                    fileInfo.appendChild(stato);
+
+                    const btn = document.createElement("button");
+                    btn.className = "btn-mini";
+                    btn.innerHTML = iconEye() + " Apri";
+                    btn.onclick = () => accessoOspite(file.id, file.nome);
+
+                    item.appendChild(fileInfo);
+                    item.appendChild(btn);
+                    container.appendChild(item);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<div class="no-files">Errore caricamento lista.</div>`;
+                alert("Errore lista ospite:\n" + err.message);
+            }
+        }
+
+        async function salvaConfigurazioneHost() {
+            const fileInput = document.getElementById("host-file-input");
+            const guestPass = document.getElementById("host-guest-pass-set").value.trim();
+            const btnSalva = document.getElementById("btn-salva");
+
+            if (!fileInput.files[0]) {
+                alert("Devi selezionare un PDF.");
+                return;
+            }
+
+            if (!guestPass) {
+                alert("Devi inserire una password per il documento.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            if (file.type !== "application/pdf") {
+                alert("Puoi caricare solo file PDF.");
+                return;
+            }
+
+            btnSalva.disabled = true;
+            btnSalva.innerHTML = iconSpinner() + " Caricamento...";
+            mostraLoading("Caricamento PDF", "Salvataggio del documento in corso...");
+
+            try {
+                const base64Pdf = await leggiFileComeDataURL(file);
+
+                const payload = {
+                    nome: file.name,
+                    pdf: base64Pdf,
+                    password: guestPass
+                };
+
+                const data = await apiFetch(`${SERVER_URL}/api/upload`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!data.success) {
+                    throw new Error(data.message || "Upload non riuscito.");
+                }
+
+                const nuovoId = data.fileCaricato && data.fileCaricato.id ? data.fileCaricato.id : "";
+
+                if (!nuovoId) {
+                    throw new Error("Il server non ha restituito l'ID del file caricato.");
+                }
+
+                document.getElementById("preview-nome-file").innerText = file.name;
+                document.getElementById("preview-pass-file").innerText = guestPass;
+
+                document.getElementById("btn-preview-apri").onclick = function () {
+                    apriFileHost(nuovoId);
+                };
+
+                document.getElementById("btn-preview-elimina").onclick = function () {
+                    eliminaFile(nuovoId, true);
+                };
+
+                document.getElementById("ultimo-salvataggio-box").style.display = "block";
+
+                document.getElementById("host-file-input").value = "";
+                document.getElementById("host-guest-pass-set").value = "";
+
+                await aggiornaListaFileHost();
+
+                alert("File caricato correttamente!");
+
+            } catch (err) {
+                alert("Caricamento fallito:\n" + err.message);
+            } finally {
+                nascondiLoading();
+                btnSalva.disabled = false;
+                btnSalva.innerHTML = iconSave() + " Salva nel Database";
+            }
+        }
+
+        function leggiFileComeDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    resolve(e.target.result);
+                };
+
+                reader.onerror = function () {
+                    reject(new Error("Errore durante la lettura del file PDF."));
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function apriFileHost(id) {
+            mostraLoading("Apertura documento", "Preparazione del PDF...");
+
+            try {
+                const data = await apiFetch(`${SERVER_URL}/api/file/${encodeURIComponent(id)}`);
+
+                if (!data.success || !data.pdf) {
+                    throw new Error("PDF non presente nella risposta del server.");
+                }
+
+                ospiteNomeCompleto = "";
+                await apriViewerPdf(data.pdf, data.nome || "documento.pdf", "panel-host-dashboard", false);
+
+            } catch (err) {
+                alert("Errore apertura file:\n" + err.message);
+            } finally {
+                nascondiLoading();
+            }
+        }
+
+        async function eliminaFile(id, nascondiAnteprima = false) {
+            if (!confirm("Cancellare fisicamente dal server?")) {
+                return;
+            }
+
+            try {
+                await apiFetch(`${SERVER_URL}/api/file/${encodeURIComponent(id)}`, {
+                    method: "DELETE"
+                });
+
+                await aggiornaListaFileHost();
+
+                if (nascondiAnteprima) {
+                    document.getElementById("ultimo-salvataggio-box").style.display = "none";
+                }
+
+                alert("File eliminato.");
+
+            } catch (err) {
+                alert("Errore eliminazione:\n" + err.message);
+            }
+        }
+
+        async function accessoOspite(idDocumento, nomeDocumento) {
+            const nome = document.getElementById("guest-nome-input").value.trim();
+            const cognome = document.getElementById("guest-cognome-input").value.trim();
+            const inserita = document.getElementById("guest-pass-input").value.trim();
+            const accettoRegolamento = document.getElementById("guest-accetto-regolamento").checked;
+
+            if (!idDocumento) {
+                alert("Nessun documento selezionato.");
+                return;
+            }
+
+            if (!nome || !cognome) {
+                alert("Inserisci nome e cognome prima di aprire il documento.");
+                return;
+            }
+
+            if (!inserita) {
+                alert("Inserisci la password del documento.");
+                return;
+            }
+
+            if (!accettoRegolamento) {
+                alert("Devi accettare il regolamento prima di aprire il documento.");
+                return;
+            }
+
+            fileIdSelezionatoOspite = idDocumento;
+            nomeFileSelezionatoOspite = nomeDocumento || "";
+
+            mostraLoading("Accesso documento", "Verifica password e caricamento PDF...");
+
+            try {
+                const data = await apiFetch(`${SERVER_URL}/api/login-ospite`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id: fileIdSelezionatoOspite,
+                        password: inserita,
+                        nome: nome,
+                        cognome: cognome
+                    })
+                });
+
+                if (!data.success || !data.pdf) {
+                    throw new Error("PDF non presente nella risposta del server.");
+                }
+
+                if (data.ospite && data.ospite.nome && data.ospite.cognome) {
+                    ospiteNomeCompleto = data.ospite.nome + " " + data.ospite.cognome;
+                } else {
+                    ospiteNomeCompleto = nome + " " + cognome;
+                }
+
+                await apriViewerPdf(data.pdf, data.nomeFile || nomeDocumento || "documento.pdf", "panel-guest-login", true);
+
+                await aggiornaListaFileOspite();
+
+            } catch (err) {
+                alert("Errore:\n" + err.message);
+            } finally {
+                nascondiLoading();
+            }
+        }
+
+        async function apriViewerPdf(base64Pdf, nomeFile, panelRitorno, mostraDownload) {
+            pdfBase64Corrente = base64Pdf;
+            pdfNomeCorrente = normalizzaNomeFile(nomeFile || "documento.pdf");
+            ritornoViewerPanel = panelRitorno;
+            paginaCorrente = 1;
+
+            document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+
+            document.getElementById("viewer-title").innerText = pdfNomeCorrente;
+            document.getElementById("viewer-container").style.display = "block";
+            document.getElementById("btn-download-pdf").style.display = mostraDownload ? "inline-flex" : "none";
+
+            const badge = document.getElementById("viewer-user-badge");
+
+            if (ospiteNomeCompleto) {
+                badge.innerText = "Accesso intestato a: " + ospiteNomeCompleto;
+                badge.style.display = "block";
+            } else {
+                badge.style.display = "none";
+            }
+
+            document.getElementById("btn-chiudi-viewer").onclick = function () {
+                chiudiViewer();
+            };
+
+            try {
+                pdfDocumentoCorrente = await pdfjsLib.getDocument(base64Pdf).promise;
+                pagineTotali = pdfDocumentoCorrente.numPages || 1;
+
+                await renderizzaPaginaCorrente();
+
+            } catch (err) {
+                console.error(err);
+                alert("Errore apertura PDF:\n" + err.message);
+            }
+        }
+
+        function chiudiViewer() {
+            document.getElementById("viewer-container").style.display = "none";
+            switchPanel(ritornoViewerPanel);
+        }
+
+        async function paginaPrecedente() {
+            if (!pdfDocumentoCorrente) return;
+
+            if (paginaCorrente > 1) {
+                mostraLoading("Cambio pagina", "Caricamento pagina precedente...");
+                paginaCorrente--;
+                await renderizzaPaginaCorrente();
+                nascondiLoading();
+            }
+        }
+
+        async function paginaSuccessiva() {
+            if (!pdfDocumentoCorrente) return;
+
+            if (paginaCorrente < pagineTotali) {
+                mostraLoading("Cambio pagina", "Caricamento pagina successiva...");
+                paginaCorrente++;
+                await renderizzaPaginaCorrente();
+                nascondiLoading();
+            }
+        }
+
+        async function renderizzaPaginaCorrente() {
+            const canvasBlur = document.getElementById("pdf-canvas-blur");
+            const canvasClear = document.getElementById("pdf-canvas-clear");
+            const area = document.getElementById("pdf-protected-area");
+
+            area.classList.add("loading-shimmer");
+
+            const ctxBlur = canvasBlur.getContext("2d", { alpha: false });
+            const ctxClear = canvasClear.getContext("2d", { alpha: false });
+
+            try {
+                const page = await pdfDocumentoCorrente.getPage(paginaCorrente);
+                const viewportBase = page.getViewport({ scale: 1 });
+
+                const isMobile = window.innerWidth <= 760;
+                const sidePadding = isMobile ? 8 : 18;
+                const availableWidth = Math.min(window.innerWidth - sidePadding, 1100);
+                const cssScale = availableWidth / viewportBase.width;
+
+                const viewportCss = page.getViewport({ scale: cssScale });
+                const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2.4 : 3);
+                const viewportRender = page.getViewport({ scale: cssScale * dpr });
+
+                canvasBlur.width = Math.floor(viewportRender.width);
+                canvasBlur.height = Math.floor(viewportRender.height);
+                canvasClear.width = Math.floor(viewportRender.width);
+                canvasClear.height = Math.floor(viewportRender.height);
+
+                canvasBlur.style.width = viewportCss.width + "px";
+                canvasBlur.style.height = viewportCss.height + "px";
+                canvasClear.style.width = viewportCss.width + "px";
+                canvasClear.style.height = viewportCss.height + "px";
+
+                area.style.width = viewportCss.width + "px";
+                area.style.height = viewportCss.height + "px";
+
+                ctxBlur.setTransform(1, 0, 0, 1, 0, 0);
+                ctxClear.setTransform(1, 0, 0, 1, 0, 0);
+
+                ctxBlur.clearRect(0, 0, canvasBlur.width, canvasBlur.height);
+                ctxClear.clearRect(0, 0, canvasClear.width, canvasClear.height);
+
+                await page.render({
+                    canvasContext: ctxBlur,
+                    viewport: viewportRender
+                }).promise;
+
+                await page.render({
+                    canvasContext: ctxClear,
+                    viewport: viewportRender
+                }).promise;
+
+                document.getElementById("page-indicator").innerText = paginaCorrente + " / " + pagineTotali;
+
+                generaWatermarks();
+                inizializzaLente();
+
+                area.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+
+            } catch (err) {
+                console.error(err);
+                alert("Errore rendering pagina:\n" + err.message);
+            } finally {
+                area.classList.remove("loading-shimmer");
+            }
+        }
+
+        function generaWatermarks() {
+            const box = document.getElementById("watermark-box");
+            box.innerHTML = "";
+
+            const now = new Date();
+            const dataOra = now.toLocaleString("it-IT");
+            const codice = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+            const intestatario = ospiteNomeCompleto
+                ? " - UTENTE " + ospiteNomeCompleto.toUpperCase()
+                : "";
+
+            const testo = "DOCUMENTO RISERVATO - SCREEN VIETATO" + intestatario + " - " + dataOra + " - CODICE " + codice + " - PAG. " + paginaCorrente;
+
+            for (let i = 0; i < 55; i++) {
+                const span = document.createElement("span");
+                span.innerText = testo;
+                span.style.opacity = "0.22";
+                box.appendChild(span);
+            }
+        }
+
+        function inizializzaLente() {
+            const area = document.getElementById("pdf-protected-area");
+            const lens = document.getElementById("lens-box");
+            const canvasClear = document.getElementById("pdf-canvas-clear");
+
+            if (!area || !lens || !canvasClear) return;
+
+            function muoviLente(clientX, clientY) {
+                const rect = area.getBoundingClientRect();
+
+                let x = clientX - rect.left;
+                let y = clientY - rect.top;
+
+                const lensW = lens.offsetWidth;
+                const lensH = lens.offsetHeight;
+
+                const maxX = Math.max(0, area.offsetWidth - lensW);
+                const maxY = Math.max(0, area.offsetHeight - lensH);
+
+                let left = x - lensW / 2;
+                let top = y - lensH / 2;
+
+                if (left < 0) left = 0;
+                if (top < 0) top = 0;
+                if (left > maxX) left = maxX;
+                if (top > maxY) top = maxY;
+
+                lens.style.left = left + "px";
+                lens.style.top = top + "px";
+                lens.style.transform = "none";
+
+                canvasClear.style.left = "-" + left + "px";
+                canvasClear.style.top = "-" + top + "px";
+            }
+
+            area.onmousemove = function (e) {
+                muoviLente(e.clientX, e.clientY);
+            };
+
+            area.ontouchstart = function (e) {
+                if (e.touches.length > 0) {
+                    e.preventDefault();
+                    muoviLente(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            };
+
+            area.ontouchmove = function (e) {
+                if (e.touches.length > 0) {
+                    e.preventDefault();
+                    muoviLente(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            };
+
+            const rect = area.getBoundingClientRect();
+            muoviLente(rect.left + rect.width / 2, rect.top + rect.height * 0.38);
+        }
+
+        async function scaricaPdfCorrente() {
+            if (!pdfBase64Corrente) {
+                alert("Nessun PDF disponibile per il download.");
+                return;
+            }
+
+            const btnDownload = document.getElementById("btn-download-pdf");
+            const contenutoOriginale = btnDownload.innerHTML;
+
+            mostraLoading("Creo PDF", "Inserimento watermark nel documento...");
+
+            try {
+                btnDownload.disabled = true;
+                btnDownload.innerHTML = iconSpinner() + '<span class="viewer-text">Creo...</span>';
+
+                const pdfBytesOriginale = dataUrlToUint8Array(pdfBase64Corrente);
+
+                const pdfDoc = await PDFLib.PDFDocument.load(pdfBytesOriginale);
+                const pages = pdfDoc.getPages();
+
+                const now = new Date();
+                const dataOra = now.toLocaleString("it-IT");
+                const codice = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+                const intestatario = ospiteNomeCompleto
+                    ? ospiteNomeCompleto.toUpperCase()
+                    : "OSPITE";
+
+                const testoWatermark = "DOCUMENTO RISERVATO - " + intestatario + " - " + dataOra + " - CODICE " + codice;
+
+                const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+
+                for (let i = 0; i < pages.length; i++) {
+                    const page = pages[i];
+                    const { width, height } = page.getSize();
+
+                    const testoPagina = testoWatermark + " - PAG. " + (i + 1);
+
+                    page.drawText(testoPagina, {
+                        x: width * 0.08,
+                        y: height * 0.32,
+                        size: Math.max(18, width * 0.032),
+                        font: font,
+                        color: PDFLib.rgb(1, 0.05, 0.05),
+                        opacity: 0.13,
+                        rotate: PDFLib.degrees(-32)
+                    });
+
+                    const stepX = width / 1.7;
+                    const stepY = height / 4;
+
+                    for (let y = -height * 0.1; y < height * 1.15; y += stepY) {
+                        for (let x = -width * 0.2; x < width * 1.1; x += stepX) {
+                            page.drawText(testoPagina, {
+                                x: x,
+                                y: y,
+                                size: Math.max(8, width * 0.014),
+                                font: font,
+                                color: PDFLib.rgb(1, 0.05, 0.05),
+                                opacity: 0.17,
+                                rotate: PDFLib.degrees(-32)
+                            });
+                        }
+                    }
+
+                    page.drawText("Scaricato da: " + intestatario + " - " + dataOra, {
+                        x: 24,
+                        y: 18,
+                        size: 8,
+                        font: font,
+                        color: PDFLib.rgb(0.85, 0.05, 0.05),
+                        opacity: 0.30
+                    });
+                }
+
+                const pdfBytesFinale = await pdfDoc.save();
+
+                const blob = new Blob([pdfBytesFinale], {
+                    type: "application/pdf"
+                });
+
+                const url = URL.createObjectURL(blob);
+
+                const link = document.createElement("a");
+                link.href = url;
+
+                const nomeSenzaPdf = pdfNomeCorrente.replace(/\.pdf$/i, "");
+                link.download = nomeSenzaPdf + "_watermark.pdf";
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                setTimeout(function () {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                alert("Errore durante la creazione del PDF con watermark:\n" + err.message);
+            } finally {
+                nascondiLoading();
+                btnDownload.disabled = false;
+                btnDownload.innerHTML = contenutoOriginale;
+            }
+        }
+
+        function dataUrlToUint8Array(dataUrl) {
+            const base64 = dataUrl.split(",")[1];
+
+            if (!base64) {
+                throw new Error("PDF non valido: dati base64 mancanti.");
+            }
+
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            return bytes;
+        }
+
+        function normalizzaNomeFile(nome) {
+            let pulito = String(nome || "documento.pdf").trim();
+
+            if (!pulito.toLowerCase().endsWith(".pdf")) {
+                pulito += ".pdf";
+            }
+
+            return pulito.replace(/[\\/:*?"<>|]/g, "_");
+        }
+
+        function iconEye() {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        }
+
+        function iconTrash() {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 15H6L5 6"></path></svg>';
+        }
+
+        function iconSave() {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg>';
+        }
+
+        function iconSpinner() {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 0 1-9 9"></path><path d="M3 12a9 9 0 0 1 9-9"></path></svg>';
+        }
+
+        document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener("touchend", function (e) {
+            const adesso = Date.now();
+
+            if (adesso - ultimoTap <= 350) {
+                e.preventDefault();
+            }
+
+            ultimoTap = adesso;
+        }, { passive: false });
+
+        document.addEventListener("gesturestart", function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener("gesturechange", function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener("gestureend", function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener("keydown", function (e) {
+            const key = e.key.toLowerCase();
+
+            if (
+                e.key === "PrintScreen" ||
+                e.key === "F12" ||
+                ((e.ctrlKey || e.metaKey) && ["s", "p", "u", "c", "a"].includes(key)) ||
+                ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(key))
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                oscuraDocumento();
+
+                setTimeout(function () {
+                    mostraDocumento();
+                }, 1200);
+
+                return false;
+            }
+        });
+
+        function oscuraDocumento() {
+            const viewer = document.getElementById("viewer-container");
+            if (viewer && viewer.style.display === "block") {
+                viewer.classList.add("blurred");
+            }
+        }
+
+        function mostraDocumento() {
+            const viewer = document.getElementById("viewer-container");
+            if (viewer && viewer.style.display === "block") {
+                viewer.classList.remove("blurred");
+            }
+        }
+
+        window.addEventListener("blur", function () {
+            oscuraDocumento();
+        });
+
+        window.addEventListener("focus", function () {
+            mostraDocumento();
+        });
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+                oscuraDocumento();
+            } else {
+                mostraDocumento();
+            }
+        });
+
+        window.addEventListener("pagehide", function () {
+            oscuraDocumento();
+        });
+
+        window.addEventListener("pageshow", function () {
+            mostraDocumento();
+        });
+
+        window.addEventListener("resize", function () {
+            clearTimeout(resizeTimer);
+
+            resizeTimer = setTimeout(async function () {
+                if (pdfDocumentoCorrente && document.getElementById("viewer-container").style.display === "block") {
+                    await renderizzaPaginaCorrente();
+                }
+            }, 250);
+        });
+
+        window.addEventListener("orientationchange", function () {
+            clearTimeout(resizeTimer);
+
+            resizeTimer = setTimeout(async function () {
+                if (pdfDocumentoCorrente && document.getElementById("viewer-container").style.display === "block") {
+                    await renderizzaPaginaCorrente();
+                }
+            }, 500);
+        });
+
+        window.addEventListener("load", function () {
+            controllaServer();
+        });
+    </script>
+
+</body>
+</html>
